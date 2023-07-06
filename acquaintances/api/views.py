@@ -1,14 +1,14 @@
 from django.http import JsonResponse
 from django.core.mail import send_mail
 
-from rest_framework import status
+from rest_framework import status, filters
 from rest_framework.response import Response
 from rest_framework.generics import CreateAPIView, ListAPIView
-from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
+from django_filters.rest_framework import DjangoFilterBackend
 
 from .models import User, Like
-from .serializers import UserRegistrSerializer
+from .serializers import UserRegistrSerializer, UserSerializer
 from acquaintances import settings
     
 
@@ -46,4 +46,12 @@ def match(request, pk):
         return JsonResponse({'message': 'Успешно оценено'})
     except User.DoesNotExist:
         return JsonResponse({'message': 'Участник не найден'})
+    
+
+class UserListView(ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['sex', 'first_name', 'last_name']
+    search_fields = ['first_name', 'last_name']
 
