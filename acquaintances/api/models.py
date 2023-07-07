@@ -37,6 +37,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=30,)
     last_name = models.CharField(max_length=30)
     is_staff = models.BooleanField(default=False)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True, verbose_name='долгота')
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True, verbose_name='широта')
 
     def user_directory_path(instance, filename):
         return 'avatars/user_{0}_{1}'.format(instance, filename)

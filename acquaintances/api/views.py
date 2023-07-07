@@ -6,6 +6,8 @@ from rest_framework.response import Response
 from rest_framework.generics import CreateAPIView, ListAPIView
 from rest_framework.permissions import AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
+from geopy.distance import great_circle
+from geopy import distance
 
 from .models import User, Like
 from .serializers import UserRegistrSerializer, UserSerializer
@@ -54,4 +56,18 @@ class UserListView(ListAPIView):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['sex', 'first_name', 'last_name']
     search_fields = ['first_name', 'last_name']
+
+    def get_queryset(self):
+        queryset = User.objects.all().exclude(id=self.request.user.id)
+        distparam = self.request.GET.get('distance')
+        if distparam:
+            filtered_queryset = []
+            for user in queryset:
+                from_loc = (self.request.user.latitude, self.request.user.longitude)
+                self_loc = (user.latitude, user.longitude)
+                distancee = distance.distance(from_loc, self_loc).m
+                if distancee < float(distparam):
+                    filtered_queryset.append(user)
+            return User.objects.filter(id__in=[user.id for user in filtered_queryset])
+        return queryset
 
