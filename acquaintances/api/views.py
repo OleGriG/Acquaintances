@@ -45,8 +45,8 @@ def match(request, pk):
                 fail_silently=False,
             )
             return JsonResponse({'message': 'Взаимная симпатия'})
-        Like.objects.create(participant=liked_participant,
-                            liked_participant=participant)
+        Like.objects.create(participant=request.user,
+                            liked_participant=liked_participant)
         return JsonResponse({'message': 'Успешно оценено'})
     except User.DoesNotExist:
         return JsonResponse({'message': 'Участник не найден'})
