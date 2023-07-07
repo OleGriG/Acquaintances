@@ -1,4 +1,3 @@
-import tempfile
 from django.db import models
 from django.contrib.auth.models import (
     AbstractBaseUser,
@@ -7,11 +6,9 @@ from django.contrib.auth.models import (
     )
 from django.core.files import File
 
-import os
-from random import randint
+import tempfile
 
-from acquaintances import settings
-from PIL import Image, ImageEnhance
+from PIL import Image
 
 
 class MyUserManager(BaseUserManager):
@@ -29,7 +26,12 @@ class MyUserManager(BaseUserManager):
         return self._create_user(email, password)
 
     def create_superuser(self, email, password):
-        return self._create_user(email, password, is_staff=True, is_superuser=True)
+        return self._create_user(
+            email,
+            password,
+            is_staff=True,
+            is_superuser=True
+        )
 
 
 class User(AbstractBaseUser, PermissionsMixin):
@@ -37,12 +39,28 @@ class User(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=30,)
     last_name = models.CharField(max_length=30)
     is_staff = models.BooleanField(default=False)
-    longitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True, verbose_name='долгота')
-    latitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True, verbose_name='широта')
+    longitude = models.DecimalField(
+        max_digits=9,
+        decimal_places=6,
+        blank=True,
+        null=True,
+        verbose_name='долгота'
+    )
+    latitude = models.DecimalField(
+        max_digits=9,
+        decimal_places=6,
+        blank=True, null=True,
+        verbose_name='широта'
+    )
 
     def user_directory_path(instance, filename):
         return 'avatars/user_{0}_{1}'.format(instance, filename)
-    avatar = models.ImageField(verbose_name="Avatar", null=True, blank=True, upload_to=user_directory_path)
+    avatar = models.ImageField(
+        verbose_name="Avatar",
+        null=True,
+        blank=True,
+        upload_to=user_directory_path
+    )
 
     sex_Choices = (
         ('M', 'Male'),
@@ -79,7 +97,8 @@ class User(AbstractBaseUser, PermissionsMixin):
             output_image.save('static/output.png')
             output_image.save(temp_file.name, format='PNG')
             print(watermarked_image.mode)
-            self.avatar.save('watermarked_image.png', File(open(temp_file.name, "rb")), save=False)
+            self.avatar.save('watermarked_image.png',
+                             File(open(temp_file.name, "rb")), save=False)
             temp_file.close()
         super().save(*args, **kwargs)
 
@@ -92,12 +111,13 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def get_short_name(self):
         return self.first_name
-    
+
 
 class Like(models.Model):
-    participant = models.ForeignKey(User, on_delete=models.CASCADE, related_name='likes_given')
-    liked_participant = models.ForeignKey(User, on_delete=models.CASCADE, related_name='likes_received')
+    participant = models.ForeignKey(User, on_delete=models.CASCADE,
+                                    related_name='likes_given')
+    liked_participant = models.ForeignKey(User, on_delete=models.CASCADE,
+                                          related_name='likes_received')
 
     class Meta:
         unique_together = ('participant', 'liked_participant')
-

@@ -6,13 +6,12 @@ from rest_framework.response import Response
 from rest_framework.generics import CreateAPIView, ListAPIView
 from rest_framework.permissions import AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
-from geopy.distance import great_circle
 from geopy import distance
 
 from .models import User, Like
 from .serializers import UserRegistrSerializer, UserSerializer
 from acquaintances import settings
-    
+
 
 class RegistrUserView(CreateAPIView):
     queryset = User.objects.all()
@@ -29,22 +28,25 @@ class RegistrUserView(CreateAPIView):
         else: 
             data = serializer.errors
             return Response(data)
-        
+
 
 def match(request, pk):
     try:
         participant = request.user
         liked_participant = User.objects.get(id=pk)
-        if Like.objects.filter(participant=liked_participant, liked_participant=participant).exists():
+        if Like.objects.filter(participant=liked_participant,
+                               liked_participant=participant).exists():
             send_mail(
                 'Взаимная симпатия',
-                f'Вы понравились {participant.get_full_name()}! Почта участника: {participant.email}',
+                f'Вы понравились {participant.get_full_name()}!' +
+                f' Почта участника: {participant.email}',
                 settings.DEFAULT_FROM_EMAIL,
                 [participant.email, liked_participant.email],
                 fail_silently=False,
             )
             return JsonResponse({'message': 'Взаимная симпатия'})
-        Like.objects.create(participant=liked_participant, liked_participant=participant)
+        Like.objects.create(participant=liked_participant,
+                            liked_participant=participant)
         return JsonResponse({'message': 'Успешно оценено'})
     except User.DoesNotExist:
         return JsonResponse({'message': 'Участник не найден'})
@@ -63,11 +65,12 @@ class UserListView(ListAPIView):
         if distparam:
             filtered_queryset = []
             for user in queryset:
-                from_loc = (self.request.user.latitude, self.request.user.longitude)
+                from_loc = (self.request.user.latitude,
+                            self.request.user.longitude)
                 self_loc = (user.latitude, user.longitude)
                 distancee = distance.distance(from_loc, self_loc).m
                 if distancee < float(distparam):
                     filtered_queryset.append(user)
-            return User.objects.filter(id__in=[user.id for user in filtered_queryset])
+            return User.objects.filter(
+                id__in=[user.id for user in filtered_queryset])
         return queryset
-
