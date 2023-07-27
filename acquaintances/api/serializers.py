@@ -11,15 +11,12 @@ class UserRegistrSerializer(serializers.ModelSerializer):
                   'sex', 'password', 'password2', 'avatar']
 
     def save(self, *args, **kwargs):
-        user = User(email=self.validated_data['email'])
-        user.sex = self.validated_data['sex']
-        user.first_name = self.validated_data['first_name']
-        user.last_name = self.validated_data['last_name']
-        user.avatar = self.validated_data['avatar']
-        password = self.validated_data['password']
-        password2 = self.validated_data['password2']
+        data = self.validated_data.copy()
+        password = data.pop('password')
+        password2 = data.pop('password2')
         if password != password2:
             raise serializers.ValidationError('passwords are not equal!')
+        user = User.objects.create(**data)
         user.set_password(password)
         user.save()
         return user

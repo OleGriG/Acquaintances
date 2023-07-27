@@ -82,24 +82,24 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
 
     def save(self, *args, **kwargs):
-        if self.avatar:
-            original_image = Image.open(self.avatar.file)
-            watermark = Image.open('static/watermark.png').convert("RGBA")
-            transparency = 0.5
-            watermark = watermark.convert("RGBA")
-            watermark.putalpha(int(255 * transparency))
-            x = original_image.width - watermark.width - 10
-            y = original_image.height - watermark.height - 10
-            watermarked_image = original_image.copy().convert("RGBA")
-            watermarked_image.alpha_composite(watermark, (x, y))
-            temp_file = tempfile.NamedTemporaryFile(delete=False)
-            output_image = watermarked_image.convert("RGBA")
-            output_image.save('static/output.png')
-            output_image.save(temp_file.name, format='PNG')
-            print(watermarked_image.mode)
-            self.avatar.save('watermarked_image.png',
-                             File(open(temp_file.name, "rb")), save=False)
-            temp_file.close()
+        if not self.id:  # Проверяем, что id не существует
+            if self.avatar:
+                original_image = Image.open(self.avatar.file)
+                watermark = Image.open('static/watermark.png').convert("RGBA")
+                transparency = 0.5
+                watermark = watermark.convert("RGBA")
+                watermark.putalpha(int(255 * transparency))
+                x = original_image.width - watermark.width - 10
+                y = original_image.height - watermark.height - 10
+                watermarked_image = original_image.copy().convert("RGBA")
+                watermarked_image.alpha_composite(watermark, (x, y))
+                temp_file = tempfile.NamedTemporaryFile(delete=False)
+                output_image = watermarked_image.convert("RGBA")
+                output_image.save('static/output.png')
+                output_image.save(temp_file.name, format='PNG')
+                self.avatar.save('watermarked_image.png',
+                                 File(open(temp_file.name, "rb")), save=False)
+                temp_file.close()
         super().save(*args, **kwargs)
 
     class Meta:
